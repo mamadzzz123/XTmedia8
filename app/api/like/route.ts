@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
   const me = await getCurrentUser()
 
   const [countArr, isMember] = await Promise.all([
-    kv.smembers(key.likesByPost(postId)),
-    me ? kv.sismember(key.likesByPost(postId), String(me.id)) : Promise.resolve(false)
+    kv.smembers(String(key.likesByPost(postId))),
+    me ? kv.sismember(String(key.likesByPost(postId)), String(me.id)) : Promise.resolve(false)
   ])
 
   return NextResponse.json({ likeCount: countArr.length, liked: !!isMember })
@@ -26,21 +26,21 @@ export async function POST(req: NextRequest) {
   const { postId } = await req.json()
   if (!postId) return NextResponse.json({ error: 'bad_request' }, { status: 400 })
 
-  const liked = await kv.sismember(key.likesByPost(postId), String(me.id))
+  const liked = await kv.sismember(String(key.likesByPost(postId)), String(me.id))
 
   if (liked) {
     await Promise.all([
-      kv.srem(key.likesByPost(postId), String(me.id)),
-      kv.srem(key.likesByUser(String(me.id)), postId)
+      kv.srem(String(key.likesByPost(postId)), String(me.id)),
+      kv.srem(String(key.likesByUser(String(me.id))), postId)
     ])
   } else {
     await Promise.all([
-      kv.sadd(key.likesByPost(postId), String(me.id)),
-      kv.sadd(key.likesByUser(String(me.id)), postId)
+      kv.sadd(String(key.likesByPost(postId)), String(me.id)),
+      kv.sadd(String(key.likesByUser(String(me.id))), postId)
     ])
   }
 
-  const likeCount = (await kv.smembers(key.likesByPost(postId))).length
+  const likeCount = (await kv.smembers(String(key.likesByPost(postId)))).length
 
   return NextResponse.json({ liked: !liked, likeCount })
 }
