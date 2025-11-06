@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url)
   const postId = url.searchParams.get('postId')
   if (!postId) return NextResponse.json({ error: 'bad_request' }, { status: 400 })
+
   const me = await getCurrentUser()
 
   const [countArr, isMember] = await Promise.all([
